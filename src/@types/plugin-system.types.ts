@@ -3,15 +3,18 @@
  * @Email blackxes.dev@gmail.com
  */
 
-export interface PluginBase {
+export interface PluginBaseInterface {
+  beforeInit?: () => boolean;
   init?: () => boolean;
+  shutdown?: () => void;
+  afterInit?: () => boolean;
 }
 
-export type PluginFactorySignature = () =>
-  | PluginBase
-  | (() => Promise<PluginBase>);
+export type PluginFactorySignature =
+  | (() => PluginBaseInterface)
+  | (() => Promise<PluginBaseInterface>);
 export interface PluginConstructionClass {
-  new: () => PluginBase;
+  new (): PluginBaseInterface;
 }
 export type PluginConstructor =
   | PluginFactorySignature
@@ -22,8 +25,19 @@ export interface PluginRegistryItem {
   /** Either the factory or pluginClass need to be defines. Both omitted is prohibited */
   factory?: PluginFactorySignature;
   /** Either the factory or pluginClass need to be defines. Both omitted is prohibited */
-  pluginClass?: PluginConstructor;
+  pluginClass?: PluginConstructionClass;
   dependencies?: string[];
+}
+
+export interface PluginInstance {
+  identifier: string;
+  instance?: PluginBaseInterface;
+}
+
+export interface PluginRegisterOptions {
+  identifier: string;
+  constructor: PluginConstructor;
+  dependencies: string[];
 }
 
 export interface PluginRegistryInterface {
@@ -50,7 +64,7 @@ export interface PluginRegistryInterface {
    */
   override: (
     identifier: string,
-    constructor: PluginConstructor,
+    constructor: PluginConstructionClass,
     dependencies: string[]
   ) => boolean;
 
@@ -85,10 +99,34 @@ export interface PluginRegistryInterface {
 
 export interface PluginManagerInterface extends PluginRegistryInterface {
   /**
+   * Kicks off the plugin loading and their initialization processes
+   *
+   * @returns Boolean on whether the initialization was successful
+   */
+  init: () => Promise<boolean>;
+
+  /**
+   * Instantiates a plugin
    *
    * @param identifier identifier Unique plugin identifier
-   * @param killInstance If an instance of the plugin exists should it be destroyed?
-   * @returns Boolean on whether the deregistration was successful
+   * @returns The created plugin instance
+   * @returns False if the plugin was not found
    */
-  instantiate: <P extends PluginBase>(identifier: string) => P | false;
+  instantiate: <P extends PluginBaseInterface>(
+    identifier: string
+  ) => Promise<P | false>;
+}
+
+export interface PluginLoaderInterface {
+  /**
+   * Loads plugins based on a loading strategy
+   *
+   * @param pluginList The list of plugins which you want to load
+   * @returns List of plugins which were successfully loaded and initialized
+   */
+  load: (pluginList: string[]) => Promise<string[]>;
+}
+
+export interface PluginLoaderConstructor {
+  new (): PluginLoaderInterface;
 }
