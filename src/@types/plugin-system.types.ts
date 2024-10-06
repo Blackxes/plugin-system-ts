@@ -5,7 +5,7 @@
 
 export interface PluginBaseInterface {
   beforeInit?: () => boolean;
-  init?: () => boolean;
+  init?: (() => boolean) | (() => Promise<boolean>);
   shutdown?: () => void;
   afterInit?: () => boolean;
 }
