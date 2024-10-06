@@ -37,17 +37,18 @@ export class RecursivePluginLoader implements PluginLoaderInterface {
         );
       }
 
-      this._pendingPlugins.set(identifier, true);
-
-      if (this._pendingPlugins.has(identifier)) {
+      if (this._pendingPlugins.get(identifier)) {
         throw new Error(
           `Detected a circular dependency in plugin "${identifier}" with "${parent}"`
         );
       }
 
+      this._pendingPlugins.set(identifier, true);
+
       // Dependencies and the plugin in question itself.. voila
-      registryItem.dependencies &&
-        (await this._load(registryItem.dependencies, identifier));
+      if (registryItem.dependencies && registryItem.dependencies.length > 0) {
+        await this._load(registryItem.dependencies, identifier);
+      }
 
       if ((await PluginManager.instantiate(identifier)) === false) {
         throw new Error(`Couldn't instantiate plugin "${identifier}"`);

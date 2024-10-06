@@ -13,7 +13,7 @@ import {
 import { PluginBase } from "./plugin-base";
 import PluginManager from "./plugin-manager";
 
-class PluginRegistryClass implements PluginRegistryInterface {
+export class PluginRegistryClass implements PluginRegistryInterface {
   private _registry: Map<string, PluginRegistryItem>;
 
   constructor() {
@@ -23,7 +23,7 @@ class PluginRegistryClass implements PluginRegistryInterface {
   public register(
     identifier: string,
     constructor: PluginConstructor,
-    dependencies: string[]
+    dependencies: string[] = []
   ) {
     if (this._registry.has(identifier)) {
       return false;
@@ -34,8 +34,11 @@ class PluginRegistryClass implements PluginRegistryInterface {
       dependencies,
     };
 
-    if (constructor.prototype instanceof PluginBase) {
-      throw new Error("Constructor class ");
+    if (
+      isClass(constructor) &&
+      !(constructor.prototype instanceof PluginBase)
+    ) {
+      throw new Error("Plugin constructor class must inherit from PluginBase");
     }
 
     registryItem.identifier;
@@ -44,6 +47,7 @@ class PluginRegistryClass implements PluginRegistryInterface {
       identifier,
       factory: isClass(constructor) ? undefined : constructor,
       pluginClass: isClass(constructor) ? constructor : undefined,
+      dependencies,
     });
 
     return true;
@@ -52,7 +56,7 @@ class PluginRegistryClass implements PluginRegistryInterface {
   public override(
     identifier: string,
     constructor: PluginConstructionClass,
-    dependencies: string[]
+    dependencies: string[] = []
   ) {
     const plugin = this.get(identifier);
 
@@ -99,5 +103,3 @@ class PluginRegistryClass implements PluginRegistryInterface {
     return [...this._registry.keys()];
   }
 }
-
-export default PluginRegistryClass;

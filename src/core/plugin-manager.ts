@@ -11,25 +11,29 @@ import {
   PluginManagerInterface,
 } from "../@types/plugin-system.types";
 import { RecursivePluginLoader } from "./plugin-loader";
-import PluginRegistry from "./plugin-registry";
+import { PluginRegistryClass } from "./plugin-registry";
 
 class PluginManagerClass
-  extends PluginRegistry
+  extends PluginRegistryClass
   implements PluginManagerInterface
 {
   private _instantiated: Map<string, PluginBaseInterface> = new Map();
-
-  private _loaderConstructor: PluginLoaderConstructor = RecursivePluginLoader;
   private _loader: PluginLoaderInterface | null = null;
+  private _loaderClass: PluginLoaderConstructor | null = null;
 
   public constructor() {
     super();
   }
 
-  public async init() {
-    if (!this._loader) {
-      this._loader = new this._loaderConstructor();
+  public async init(loader?: PluginLoaderConstructor) {
+    // Custom loader
+    if (loader) this._loaderClass = loader;
+
+    if (!this._loaderClass) {
+      this._loaderClass = RecursivePluginLoader;
     }
+
+    this._loader = new this._loaderClass();
 
     // If the count of loaded plugins doesn't match the registered something is missing
     return (
@@ -38,12 +42,16 @@ class PluginManagerClass
   }
 
   public setLoader(loader: PluginLoaderConstructor) {
-    this._loaderConstructor = loader;
+    this._loaderClass = loader;
   }
 
   public async instantiate<P extends PluginBaseInterface>(
     identifier: string
   ): Promise<P | false> {
+    if (this._instantiated.has(identifier)) {
+      return this._instantiated.get(identifier) as P;
+    }
+
     const plugin = this.get(identifier);
 
     if (!plugin) {
@@ -58,11 +66,16 @@ class PluginManagerClass
       ? new plugin.pluginClass()
       : null;
 
-    if (instance === null) {
+    if (instance == null) {
       return false;
     }
 
     this._instantiated.set(identifier, instance);
+
+    instance.init &&
+      (isAsyncFunction(instance.init)
+        ? await instance.init()
+        : instance.init());
 
     return instance as P;
   }
@@ -81,6 +94,10 @@ class PluginManagerClass
     }
 
     return true;
+  }
+
+  public getLoadingOrder() {
+    return [...this._instantiated.keys()];
   }
 }
 
