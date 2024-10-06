@@ -5,9 +5,4 @@
 
 import { PluginBaseInterface } from "../@types/plugin-system.types";
 
-export class PluginBase implements PluginBaseInterface {
-  constructor() {}
-  init() {
-    return true;
-  }
-}
+export class PluginBase implements PluginBaseInterface {}
