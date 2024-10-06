@@ -115,6 +115,21 @@ export interface PluginManagerInterface extends PluginRegistryInterface {
   instantiate: <P extends PluginBaseInterface>(
     identifier: string
   ) => Promise<P | false>;
+
+  /**
+   * Triggers a plugins shutdown and kills it afterwards
+   *
+   * @param identifier Unique plugin identifier
+   * @returns Whether the instance got killed or not
+   */
+  kill: (identifier: string) => Promise<boolean>;
+
+  /**
+   * Returns a list of loaded plugins in order in which their were loaded
+   *
+   * @returns The list of plugins
+   */
+  getLoadingOrder: () => string[];
 }
 
 export interface PluginLoaderInterface {
