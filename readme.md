@@ -4,10 +4,10 @@ Don't you hate it when you have so many modules, plugins, packages or however yo
 
 Well god bless you because you found this sweet little piece of code :D
 
-Usage
+### Usage
 
 ```typescript
-import PluginManager from "<where-ever-you-have-it-laying-around>";
+import PluginManager from "<wherever-you-have-it-laying-around>";
 
 // Register your plugins and their dependencies
 PluginManager.register(PluginA.name, PluginA, [PluginB.name]);
@@ -18,18 +18,23 @@ PluginManager.register(PluginC.name, PluginC);
 PluginManager.override(PluginC.name, PluginD);
 PluginManager.override(PluginB.name, PluginE, [PluginC.name]);
 
-// Kickoff the loader and instantiate/initilaize the plugins
+// Kick off the loader and instantiate/initialize the plugins
 PluginManager.init();
 ```
 
-And you are really fancy
+And if you are really fancy
 
 ```typescript
-// When initializing you can pass down your own loader ... uhhhh
+// When initializing you can pass down your own loader .. uhhhh
 PluginManager.init(MyVeryOwnFancyPluginLoader);
+
+// Or using the setter ..
+PluginManager.setLoader(MyOtherVeryOwnFancyPluginLoader);
+// .. and initialize later
+PluginManager.init();
 ```
 
-## Features
+### Features
 
-- Multiplugin handling with respect to their dependencies
-- Detect circular dependencies (Nice to be able to handle them, but not yet)
+- Dependency first loading strategy
+- Detects circular dependencies (Nice to be able to handle them, but not yet)

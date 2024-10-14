@@ -50,7 +50,7 @@ export class RecursivePluginLoader implements PluginLoaderInterface {
         await this._load(registryItem.dependencies, identifier);
       }
 
-      if ((await PluginManager.instantiate(identifier)) === false) {
+      if ((await PluginManager.initiate(identifier)) === false) {
         throw new Error(`Couldn't instantiate plugin "${identifier}"`);
       }
 

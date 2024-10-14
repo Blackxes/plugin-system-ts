@@ -29,3 +29,10 @@ export const isClass = <ClassType>(
   value: any
 ): value is ClassBlueprint<ClassType> =>
   typeof value == "function" && value.toString().includes("class");
+
+export type MultivariateFunction<ReturnType = any> = (
+  ...args: any[]
+) => ReturnType;
+export type MultivariateFunctionAsync<ReturnType = any> = (
+  ...args: any[]
+) => Promise<ReturnType>;

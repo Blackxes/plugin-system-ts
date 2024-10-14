@@ -4,7 +4,7 @@
  */
 
 import { expect, test } from "vitest";
-import PluginManager from "../../index";
+import PluginManager from "../../core/plugin-manager";
 import {
   PluginA,
   PluginB,
