@@ -9,7 +9,9 @@ import {
   PluginLoaderConstructor,
   PluginLoaderInterface,
   PluginManagerInterface,
+  PluginRegistryItem,
 } from "../@types/plugin-system.types";
+import { executeFunction } from "./plugin-helper";
 import { RecursivePluginLoader } from "./plugin-loader";
 import { PluginRegistryClass } from "./plugin-registry";
 
@@ -45,37 +47,64 @@ class PluginManagerClass
     this._loaderClass = loader;
   }
 
-  public async instantiate<P extends PluginBaseInterface>(
+  public async initiate<P extends PluginBaseInterface>(
     identifier: string
-  ): Promise<P | false> {
+  ): Promise<P | boolean | null> {
     if (this._instantiated.has(identifier)) {
       return this._instantiated.get(identifier) as P;
     }
 
-    const plugin = this.get(identifier);
+    const registryItem = this.get(identifier);
 
-    if (!plugin) {
+    if (!registryItem) {
+      return null;
+    }
+
+    // To factory or not to factory
+    const result: PluginBaseInterface | boolean =
+      await this._resolvePluginInstantiation(registryItem);
+
+    if (typeof result === "boolean") {
+      return result;
+    }
+
+    if (!result) {
       return false;
     }
 
-    const instance: PluginBaseInterface | null = plugin.factory
-      ? isAsyncFunction<PluginBaseInterface>(plugin.factory)
-        ? await plugin.factory()
-        : plugin.factory()
-      : plugin.pluginClass
-      ? new plugin.pluginClass()
-      : null;
+    this._instantiated.set(identifier, result);
 
+    return result as P;
+  }
+
+  private async _resolvePluginInstantiation<P extends PluginBaseInterface>(
+    plugin: PluginRegistryItem
+  ): Promise<P | boolean> {
+    // If its a factory
+    let instance = await executeFunction(plugin.factory);
+
+    // Simple single function plugins are the best plugins
+    if (typeof instance == "boolean") {
+      return instance;
+    }
+
+    // On a class plugin
     if (instance == null) {
-      return false;
+      if (!plugin.pluginClass) {
+        throw new Error(
+          "Tried to instantiate an invalid plugin class. Please define either a factory or a class as a plugin"
+        );
+      }
+
+      instance = new plugin.pluginClass();
     }
 
-    this._instantiated.set(identifier, instance);
+    // From here on `instance` is an plugin instance
+    await executeFunction(instance.beforeInit);
+    await executeFunction(instance.init);
+    await executeFunction(instance.afterInit);
 
-    instance.init &&
-      (isAsyncFunction(instance.init)
-        ? await instance.init()
-        : instance.init());
+    this._instantiated.set(plugin.identifier, instance);
 
     return instance as P;
   }

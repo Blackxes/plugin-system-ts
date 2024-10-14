@@ -19,7 +19,7 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "paths": {
-      "plugin-system-ts": ["./src/index"]
+      "plugin-system-ts": ["./index"]
     }
   },
   "include": ["src"]

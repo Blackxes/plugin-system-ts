@@ -4,17 +4,17 @@
  */
 
 export interface PluginBaseInterface {
-  beforeInit?: () => boolean;
+  beforeInit?: (wusa: number) => boolean;
   init?: (() => boolean) | (() => Promise<boolean>);
   shutdown?: () => void;
   afterInit?: () => boolean;
 }
 
 export type PluginFactorySignature =
-  | (() => PluginBaseInterface)
-  | (() => Promise<PluginBaseInterface>);
+  | ((...args: any[]) => PluginBaseInterface | boolean)
+  | ((...args: any[]) => Promise<PluginBaseInterface | boolean>);
 export interface PluginConstructionClass {
-  new (): PluginBaseInterface;
+  new (...args: any[]): PluginBaseInterface;
 }
 export type PluginConstructor =
   | PluginFactorySignature
@@ -34,7 +34,7 @@ export interface PluginInstance {
   instance?: PluginBaseInterface;
 }
 
-export interface PluginRegisterOptions {
+export interface PluginRegistrationOptions {
   identifier: string;
   constructor: PluginConstructor;
   dependencies: string[];
@@ -106,15 +106,17 @@ export interface PluginManagerInterface extends PluginRegistryInterface {
   init: () => Promise<boolean>;
 
   /**
-   * Instantiates a plugin
+   * Initiates the construction of a plugin class
+   * or execution of a plugin factory function
    *
    * @param identifier identifier Unique plugin identifier
    * @returns The created plugin instance
-   * @returns False if the plugin was not found
+   * @returns Boolean on factory execution
+   * @returns Null if the plugin was not found
    */
-  instantiate: <P extends PluginBaseInterface>(
+  initiate: <P extends PluginBaseInterface>(
     identifier: string
-  ) => Promise<P | false>;
+  ) => Promise<P | boolean | null>;
 
   /**
    * Triggers a plugins shutdown and kills it afterwards
