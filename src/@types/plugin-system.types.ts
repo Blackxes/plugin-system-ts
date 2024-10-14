@@ -4,7 +4,7 @@
  */
 
 export interface PluginBaseInterface {
-  beforeInit?: (wusa: number) => boolean;
+  beforeInit?: () => boolean;
   init?: (() => boolean) | (() => Promise<boolean>);
   shutdown?: () => void;
   afterInit?: () => boolean;
